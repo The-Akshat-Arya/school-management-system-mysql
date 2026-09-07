@@ -1,17 +1,13 @@
--- ============================================================
--- MySQL Case Study Project: School Management System Database
--- Database: SchoolDB
--- Compatible with: MySQL Workbench / MySQL 8+
--- ============================================================
+-- School Management System practice project
+-- Basic Students + Marks schema with some sample data and the queries
+-- I used to practice joins, subqueries, grouping, and a few small reports.
+-- MySQL 8+ (uses a CHECK constraint and a window function below)
 
 DROP DATABASE IF EXISTS SchoolDB;
 CREATE DATABASE SchoolDB;
 USE SchoolDB;
 
-
--- ============================================================
--- 1. DATABASE CREATION + TABLE DESIGN
--- ============================================================
+-- schema
 
 CREATE TABLE Students (
     StudentID INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,14 +21,11 @@ CREATE TABLE Marks (
     MarkID INT AUTO_INCREMENT PRIMARY KEY,
     StudentID INT NOT NULL,
     Subject VARCHAR(50) NOT NULL,
-    Marks INT NOT NULL,
+    Marks INT NOT NULL CHECK (Marks BETWEEN 0 AND 100),
     FOREIGN KEY (StudentID) REFERENCES Students(StudentID)
 );
 
-
--- ============================================================
--- 2. INSERT OPERATIONS: SAMPLE RECORDS
--- ============================================================
+-- sample data
 
 INSERT INTO Students (Name, Class, Age, City) VALUES
 ('Aarav Sharma', '10A', 15, 'Ranchi'),
@@ -58,14 +51,10 @@ INSERT INTO Marks (StudentID, Subject, Marks) VALUES
 (9, 'Science', 64), (9, 'Maths', 70), (9, 'English', 66),
 (10, 'Science', 79), (10, 'Maths', 83), (10, 'English', 80);
 
-
--- Question: Add a new student record
+-- adding one more student to test the insert/delete flow below
 
 INSERT INTO Students (Name, Class, Age, City)
 VALUES ('Aditya Raj', '10A', 15, 'Ranchi');
-
-
--- Store the new student's ID and add marks for him
 
 SET @NewStudentID = LAST_INSERT_ID();
 
@@ -74,268 +63,121 @@ INSERT INTO Marks (StudentID, Subject, Marks) VALUES
 (@NewStudentID, 'Maths', 87),
 (@NewStudentID, 'English', 82);
 
+-- basic selects
 
--- ============================================================
--- 3. BASIC QUERIES
--- ============================================================
+SELECT * FROM Students;
 
--- Question 1: Display all students
+SELECT Name, City FROM Students;
 
-SELECT *
-FROM Students;
+-- students from Ranchi
+SELECT * FROM Students WHERE City = 'Ranchi';
 
+-- older than 14
+SELECT * FROM Students WHERE Age > 14;
 
--- Question 2: Display student names and cities
+SELECT * FROM Students ORDER BY Name ASC;
 
-SELECT Name, City
-FROM Students;
+-- aggregates
 
+SELECT COUNT(*) AS TotalStudents FROM Students;
 
--- Question 3: Find students from Ranchi
+SELECT AVG(Age) AS AverageAge FROM Students;
 
-SELECT *
-FROM Students
-WHERE City = 'Ranchi';
+SELECT MAX(Marks) AS MaximumMarks FROM Marks;
 
+SELECT MIN(Marks) AS MinimumMarks FROM Marks;
 
--- Question 4: Find students older than 14 years
-
-SELECT *
-FROM Students
-WHERE Age > 14;
-
-
--- Question 5: Sort students by name
-
-SELECT *
-FROM Students
-ORDER BY Name ASC;
-
-
--- ============================================================
--- 4. AGGREGATE FUNCTIONS
--- ============================================================
-
--- Question 6: Count total students
-
-SELECT COUNT(*) AS TotalStudents
-FROM Students;
-
-
--- Question 7: Calculate average age
-
-SELECT AVG(Age) AS AverageAge
-FROM Students;
-
-
--- Question 8: Find maximum marks
-
-SELECT MAX(Marks) AS MaximumMarks
-FROM Marks;
-
-
--- Question 9: Find minimum marks
-
-SELECT MIN(Marks) AS MinimumMarks
-FROM Marks;
-
-
--- Question 10: Calculate total Science marks
-
+-- total marks scored in Science across everyone
 SELECT SUM(Marks) AS TotalScienceMarks
 FROM Marks
 WHERE Subject = 'Science';
 
+-- group by
 
--- ============================================================
--- 5. GROUP BY QUERIES
--- ============================================================
-
--- Question 11: Count students city-wise
-
-SELECT
-    City,
-    COUNT(*) AS TotalStudents
+-- students per city
+SELECT City, COUNT(*) AS TotalStudents
 FROM Students
 GROUP BY City
 ORDER BY TotalStudents DESC;
 
-
--- Question 12: Calculate average marks subject-wise
-
-SELECT
-    Subject,
-    ROUND(AVG(Marks), 2) AS AverageMarks
+-- avg marks per subject
+SELECT Subject, ROUND(AVG(Marks), 2) AS AverageMarks
 FROM Marks
 GROUP BY Subject
 ORDER BY AverageMarks DESC;
 
+-- joins
 
--- ============================================================
--- 6. JOINS
--- ============================================================
-
--- Question 13: Display student name, subject and marks
-
-SELECT
-    s.Name,
-    m.Subject,
-    m.Marks
+SELECT s.Name, m.Subject, m.Marks
 FROM Students AS s
-INNER JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 ORDER BY s.Name, m.Subject;
 
-
--- Question 14: Find students scoring above 80
-
-SELECT
-    s.Name,
-    s.Class,
-    m.Subject,
-    m.Marks
+-- who scored above 80
+SELECT s.Name, s.Class, m.Subject, m.Marks
 FROM Students AS s
-INNER JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 WHERE m.Marks > 80
 ORDER BY m.Marks DESC;
 
-
--- Question 15: Find the highest-scoring student overall
-
-SELECT
-    s.Name,
-    s.Class,
-    m.Subject,
-    m.Marks
+-- single highest score in the whole dataset
+SELECT s.Name, s.Class, m.Subject, m.Marks
 FROM Students AS s
-INNER JOIN Marks AS m
-    ON s.StudentID = m.StudentID
-WHERE m.Marks = (
-    SELECT MAX(Marks)
-    FROM Marks
-);
+JOIN Marks AS m ON s.StudentID = m.StudentID
+WHERE m.Marks = (SELECT MAX(Marks) FROM Marks);
 
-
--- ============================================================
--- 7. UPDATE AND DELETE
--- ============================================================
-
--- Question 16: Update city information
+-- updates / cleanup
 
 UPDATE Students
 SET City = 'Ranchi'
 WHERE StudentID = 2;
 
-SELECT *
-FROM Students
-WHERE StudentID = 2;
+SELECT * FROM Students WHERE StudentID = 2;
 
-
--- Question 17: Increase Science marks by 5 without exceeding 100
-
+-- bump every Science mark by 5, capped at 100
 UPDATE Marks
 SET Marks = LEAST(Marks + 5, 100)
-WHERE Subject = 'Science'
-  AND MarkID > 0;
+WHERE Subject = 'Science';
 
-
--- Display updated Science marks
-
-SELECT *
-FROM Marks
-WHERE Subject = 'Science'
-  AND MarkID > 0;
-
-
--- Display updated Science marks with student names
-
-SELECT
-    s.Name,
-    m.Subject,
-    m.Marks
+SELECT s.Name, m.Subject, m.Marks
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 WHERE m.Subject = 'Science'
 ORDER BY m.Marks DESC;
 
+-- remove the test student added earlier
+-- (marks first, since Marks references Students)
+DELETE FROM Marks WHERE StudentID = @NewStudentID;
+DELETE FROM Students WHERE StudentID = @NewStudentID;
 
--- Question 18: Delete the newly added student record
--- First delete marks because Marks is connected to Students
+SELECT * FROM Students;
 
-DELETE FROM Marks
-WHERE StudentID = @NewStudentID;
+-- subqueries / window functions
 
-DELETE FROM Students
-WHERE StudentID = @NewStudentID;
-
-SELECT *
-FROM Students;
-
-
--- ============================================================
--- 8. SUBQUERIES
--- ============================================================
-
--- Question 19: Find students who scored above the overall average marks
-
-SELECT DISTINCT
-    s.StudentID,
-    s.Name,
-    s.Class
+-- students scoring above the overall average
+SELECT DISTINCT s.StudentID, s.Name, s.Class
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
-WHERE m.Marks > (
-    SELECT AVG(Marks)
-    FROM Marks
-)
+JOIN Marks AS m ON s.StudentID = m.StudentID
+WHERE m.Marks > (SELECT AVG(Marks) FROM Marks)
 ORDER BY s.Name;
 
+-- second-highest mark and who got it, using DENSE_RANK instead of a
+-- nested MAX() subquery — handles ties properly and reads a lot cleaner
+WITH RankedMarks AS (
+    SELECT s.Name, s.Class, m.Subject, m.Marks,
+           DENSE_RANK() OVER (ORDER BY m.Marks DESC) AS Rnk
+    FROM Students AS s
+    JOIN Marks AS m ON s.StudentID = m.StudentID
+)
+SELECT Name, Class, Subject, Marks
+FROM RankedMarks
+WHERE Rnk = 2;
 
--- Question 20: Find the second-highest marks value
+-- reports
 
-SELECT MAX(Marks) AS SecondHighestMarks
-FROM Marks
-WHERE Marks < (
-    SELECT MAX(Marks)
-    FROM Marks
-);
-
-
--- Question 21: Show student(s) who got the second-highest marks
-
+-- grade per mark
 SELECT
-    s.Name,
-    s.Class,
-    m.Subject,
-    m.Marks
-FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
-WHERE m.Marks = (
-    SELECT MAX(Marks)
-    FROM Marks
-    WHERE Marks < (
-        SELECT MAX(Marks)
-        FROM Marks
-    )
-);
-
-
--- ============================================================
--- 9. BUSINESS REPORTS
--- ============================================================
-
--- Question 22: Generate grade reports
-
-SELECT
-    s.StudentID,
-    s.Name,
-    s.Class,
-    m.Subject,
-    m.Marks,
+    s.StudentID, s.Name, s.Class, m.Subject, m.Marks,
     CASE
         WHEN m.Marks >= 90 THEN 'A+'
         WHEN m.Marks >= 80 THEN 'A'
@@ -345,50 +187,30 @@ SELECT
         ELSE 'Fail'
     END AS Grade
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 ORDER BY s.StudentID, m.Subject;
 
-
--- Question 23: Find top performers based on average marks
-
+-- top 5 by average
 SELECT
-    s.StudentID,
-    s.Name,
-    s.Class,
+    s.StudentID, s.Name, s.Class,
     ROUND(AVG(m.Marks), 2) AS AverageMarks,
     SUM(m.Marks) AS TotalMarks
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
-GROUP BY
-    s.StudentID,
-    s.Name,
-    s.Class
+JOIN Marks AS m ON s.StudentID = m.StudentID
+GROUP BY s.StudentID, s.Name, s.Class
 ORDER BY AverageMarks DESC
 LIMIT 5;
 
-
--- Question 24: Generate subject-wise topper report
-
-SELECT
-    m.Subject,
-    s.Name AS TopperName,
-    s.Class,
-    m.Marks AS HighestMarks
+-- topper per subject
+SELECT m.Subject, s.Name AS TopperName, s.Class, m.Marks AS HighestMarks
 FROM Marks AS m
-JOIN Students AS s
-    ON m.StudentID = s.StudentID
+JOIN Students AS s ON m.StudentID = s.StudentID
 WHERE m.Marks = (
-    SELECT MAX(m2.Marks)
-    FROM Marks AS m2
-    WHERE m2.Subject = m.Subject
+    SELECT MAX(m2.Marks) FROM Marks AS m2 WHERE m2.Subject = m.Subject
 )
 ORDER BY m.Subject;
 
-
--- Question 25: Generate city-wise performance report
-
+-- city-wise summary
 SELECT
     s.City,
     COUNT(DISTINCT s.StudentID) AS TotalStudents,
@@ -396,32 +218,17 @@ SELECT
     MAX(m.Marks) AS HighestMarks,
     MIN(m.Marks) AS LowestMarks
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 GROUP BY s.City
 ORDER BY AverageMarks DESC;
 
-
--- Question 26: Generate class-wise performance report
-
+-- class-wise summary
 SELECT
     s.Class,
     COUNT(DISTINCT s.StudentID) AS TotalStudents,
     ROUND(AVG(m.Marks), 2) AS AverageMarks,
     SUM(m.Marks) AS TotalMarks
 FROM Students AS s
-JOIN Marks AS m
-    ON s.StudentID = m.StudentID
+JOIN Marks AS m ON s.StudentID = m.StudentID
 GROUP BY s.Class
 ORDER BY AverageMarks DESC;
-
-
--- ============================================================
--- 10. SHOW ALL TABLE DATA AT THE END
--- ============================================================
-
-SELECT *
-FROM Students;
-
-SELECT *
-FROM Marks;

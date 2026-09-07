@@ -1,119 +1,47 @@
 # School Management System – MySQL Project
 
-## Project Overview
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
-This project is a MySQL-based School Management System designed to store student information and subject-wise marks.
+A small MySQL database for tracking students and their subject-wise marks — built to practice schema design, joins, subqueries, and a few reporting queries.
 
-The database demonstrates relational database design and uses SQL queries to generate academic performance reports, identify top performers, calculate grades, and analyse student results by subject, city, and class.
+## Schema
 
-## Database Structure
+**Students** — StudentID, Name, Class, Age, City
+**Marks** — MarkID, StudentID, Subject, Marks
 
-The project contains two related tables:
+Each row in `Marks` links back to a student via `StudentID` (one-to-many). `Marks` also has a `CHECK (Marks BETWEEN 0 AND 100)` constraint so bad data can't sneak in.
 
-### Students
+## What's in the script
 
-| Column | Description |
+- Table creation with a primary/foreign key relationship and a CHECK constraint
+- Sample data for 10 students across 3 subjects
+- Basic selects, filters, and sorting
+- Aggregates and GROUP BY (per-city, per-subject)
+- Joins, including finding the single highest score and everyone above 80
+- An UPDATE that caps values with `LEAST()`, and a FK-aware DELETE (marks before students)
+- Subqueries for above-average performers
+- A CTE + `DENSE_RANK()` for the second-highest mark — cleaner than nesting `MAX()` subqueries, and handles ties correctly
+- Grade classification with `CASE`, plus top-5, subject-topper, city-wise, and class-wise reports
+
+## Grade scale
+
+| Marks | Grade |
 |---|---|
-| StudentID | Unique ID for each student |
-| Name | Student name |
-| Class | Student class |
-| Age | Student age |
-| City | Student city |
-
-### Marks
-
-| Column | Description |
-|---|---|
-| MarkID | Unique ID for each marks record |
-| StudentID | Connects marks with the student |
-| Subject | Subject name |
-| Marks | Marks obtained by the student |
-
-The `StudentID` column creates a relationship between the `Students` and `Marks` tables.
-
-## SQL Concepts Used
-
-- Database creation
-- Table creation
-- Primary keys
-- Foreign keys
-- INSERT statements
-- SELECT queries
-- WHERE conditions
-- ORDER BY
-- Aggregate functions
-- GROUP BY
-- INNER JOIN
-- UPDATE statements
-- DELETE statements
-- Subqueries
-- CASE statements
-- DISTINCT
-- LIMIT
-
-## Analysis Performed
-
-The project includes queries for:
-
-- Displaying student records
-- Filtering students by city and age
-- Sorting students alphabetically
-- Counting total students
-- Calculating average student age
-- Finding maximum and minimum marks
-- Calculating total Science marks
-- Counting students city-wise
-- Calculating subject-wise average marks
-- Displaying student names with subjects and marks
-- Finding students scoring above 80
-- Finding the highest-scoring student
-- Updating student information
-- Increasing Science marks
-- Deleting connected records
-- Finding students above the overall average
-- Finding the second-highest marks
-- Generating student grades
-- Finding top performers
-- Generating subject-wise topper reports
-- Analysing city-wise performance
-- Analysing class-wise performance
-
-## Grade Classification
-
-| Marks Range | Grade |
-|---|---|
-| 90 and above | A+ |
+| 90+ | A+ |
 | 80–89 | A |
 | 70–79 | B |
 | 60–69 | C |
 | 50–59 | D |
 | Below 50 | Fail |
 
-## Project File
+## Running it
 
-- `schooldb.sql` – Complete SQL script containing database creation, sample data, analysis queries, and reports
+1. Open `schooldb.sql` in MySQL Workbench (or any MySQL 8+ client).
+2. Run the whole script — it drops/recreates `SchoolDB` from scratch.
+3. Query results appear as each statement runs; scroll through or run sections individually to inspect specific reports.
 
-## Tools Used
+## Author
 
-- MySQL
-- MySQL Workbench
-
-## How to Run the Project
-
-1. Download or clone this repository.
-2. Open MySQL Workbench.
-3. Open the `schooldb.sql` file.
-4. Select the complete script.
-5. Execute the script using the lightning icon.
-6. Refresh the Schemas panel.
-7. Open the `SchoolDB` database.
-8. Run individual queries to view the results.
-
-## Database Relationship
-
-```text
-Students
-   |
-   | StudentID
-   |
-Marks
+**Akshat Arya**
+📫 [akshatarya81@gmail.com](mailto:akshatarya81@gmail.com)
+🔗 [LinkedIn](https://www.linkedin.com/in/akshat-arya-a6644740b) · [GitHub](https://github.com/The-Akshat-Arya)
